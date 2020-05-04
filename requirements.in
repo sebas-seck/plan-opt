@@ -1,0 +1,9 @@
+jupytext
+matplotlib
+notebook
+numpy
+pandas
+sklearn
+stable-baselines3==0.9.0
+tensorboard
+yapf
