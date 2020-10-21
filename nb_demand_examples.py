@@ -16,7 +16,7 @@
 # %load_ext autoreload
 # %autoreload 2
 # %pylab inline
-pylab.rcParams['figure.figsize'] = (15, 6)
+pylab.rcParams["figure.figsize"] = (15, 6)
 
 # %%
 from plan_opt.demand import Demand

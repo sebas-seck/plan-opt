@@ -9,13 +9,11 @@ import pandas as pd
 from gym import spaces
 from plan_opt.demand import Demand
 
-# from IPython.core.display import HTML, display
-
 ACTION_LIST = [
-'OPERATE',  # 0
-'PREPARE',  # 1
-'PARK',  # 2
-'STORE',  # 3
+    "OPERATE",  # 0
+    "PREPARE",  # 1
+    "PARK",  # 2
+    "STORE",  # 3
 ]
 
 LEGAL_CHANGES = {
@@ -27,16 +25,56 @@ LEGAL_CHANGES = {
 
 
 class RampupEnv(gym.Env):
-    """Creates an environment to run ramp-up simulations.
+    """Implements an environment to run ramp-up simulations.
 
     Environment follows the gym interface.
 
     Parameters:
-        demand (Demand): Instance of demand data
-        horizon (int): Length of future observation to be regarded
-        fleet_size (int): Size of the fleet, one unit is equivalent to a
-            carrier capable of holding multiple pieces of cargo
+        demand (Demand, optional): Instance of demand data. Defaults to
+            None.
+        timeframe (int, optional): Total timeframe (in days) under
+            observation. Defaults to 0.
+        verbose (bool, optional): Defaults to False.
+
+    Attributes:
+        horizon (int): Length of future observation to be regarded.
+        fleet_size (int, optional): Size of the fleet, one unit is
+            equivalent to a carrier capable of holding multiple pieces of
+            cargo.
+        done (bool): True after the final step within the timeframe has
+            been made.
+        fill_table (bool): If true, :attr:`episode_table` is populated.
+            taken, on demand detail for the current and next timesteps.
+        episode_table (pandas.DataFrame): Table covering details per
+            timestep. Information captured includes a record per timestep
+            for current demand, next demand, action, action description and
+            the reward. Useful for evaluation, populated only if
+            `fill_table` is True.
+        total_reward (int): Reward accumulated up to the current timestep.
+        reward_range (Tuple[int, int]): Range of possible rewards.
+        action_features (int): Number of unique actions.
+        features (int): Total number of features.
+        state_time (int): Time component of state. Logically, also
+            referred to as (current) timestep.
+        state_status (numpy.ndarray): Status component of state (current
+            status).
+        action_space (gym.spaces.Discrete): The Space object
+            corresponding to valid actions.
+        observation_space (gym.spaces.Box): The Space object
+            corresponding to valid observations.
+        obs_demand (numpy.ndarray): Observation over the entire
+            timeframe. The observation space needs to extend beyond the
+            end as the horizon extends the consideration beyond the
+            available data. Per default, demand of 0 is added for the
+            length of the horizon.
+        obs_dummy_status (Dict[int, list[int]]): Dummy encoded status
+            observation. Each possible action is a key in the dictionary,
+            the value associated is a list of length len(timeframe).
+        obs_last_legal_status (int): Action key of the status at
+            state_time - 1.
+        verbose (bool):
     """
+
     def __init__(self, demand=None, timeframe=0, verbose=False):
         super(RampupEnv, self).__init__()
 
@@ -44,49 +82,37 @@ class RampupEnv(gym.Env):
             demand = Demand()
             demand.generate_demand()
             demand.apply_sudden(probability=0.3)
-            self.demand = demand.data
-        else:
-            self.demand = demand
-        self.horizon = 5
-        self.fleet_size = 1
-        self.done = None
-
-        self.fill_table = False
-        self.table = pd.DataFrame()
-
+        self.demand = demand
         if timeframe == 0:
             timeframe = len(self.demand)
         self.timeframe = timeframe
+
+        self.horizon = 5
+        self.fleet_size = 1
+        self.done = None
+        self.fill_table = False
+        self.episode_table = pd.DataFrame()
         self.total_reward = 0
         self.reward_range = (-3000, 15000)
         self.action_features = len(ACTION_LIST)
         self.features = self.action_features + 1
-
-        self.state_time = 0  # time component of state
-        self.state_status = np.array(np.zeros(timeframe),
-                                     dtype=np.uint8,
-                                     ndmin=2)  # status component of state
-
-        # action_space: The Space object corresponding to valid actions
+        self.state_time = 0
+        self.state_status = np.array(np.zeros(timeframe), dtype=np.uint8, ndmin=2)
         self.action_space = spaces.Discrete(self.action_features)
-        # observation_space: The Space object corresponding to valid observations
         self.observation_space = spaces.Box(
             low=0,
-            high=254, shape=[self.fleet_size, self.features, self.horizon],
-            dtype=np.uint8)
-        # Normalized demand on a scale between 0 and 255!
-        # self.obs_demand = self.demand / np.linalg.norm(self.demand)
-        # self.obs_demand = self.demand / np.linalg.norm(self.demand) * 255
-        self.obs_demand = (self.demand / np.linalg.norm(self.demand) *
-                           255).astype('uint8')
-        # self.obs_demand = (self.obs_demand * 255).astype('uint8')
-        # Observation space needs to extend beyond the end to cover the horizon
+            high=254,
+            shape=[self.fleet_size, self.features, self.horizon],
+            dtype=np.uint8,
+        )
+        self.obs_demand = (self.demand / np.linalg.norm(self.demand) * 255).astype(
+            "uint8"
+        )
         self.obs_demand = np.append(
-            self.obs_demand, np.array([0] * self.horizon, dtype=np.uint8))
-
+            self.obs_demand, np.array([0] * self.horizon, dtype=np.uint8)
+        )
         self.obs_dummy_status = None
         self._generate_dummy_status()
-
         self.obs_last_legal_status = None
         self.total_reward = 0
         self.verbose = verbose
@@ -114,23 +140,23 @@ class RampupEnv(gym.Env):
 
     def _translate_action(self, action):
         if action == 0:
-            action_description = 'OPERATE'
+            action_description = "OPERATE"
             if self.demand[self.state_time] > 80:
                 reward = 15000
             else:
                 reward = -3000
         elif action == 1:
-            action_description = 'PREPARE'
+            action_description = "PREPARE"
             reward = -2000
         elif action == 2:
-            action_description = 'PARK'
+            action_description = "PARK"
             reward = -1000
         elif action == 3:
-            action_description = 'STORE'
+            action_description = "STORE"
             reward = -500
 
         if self.verbose:
-            print(f'Action {action} leads to state {action_description}')
+            print(f"Action {action} leads to state {action_description}")
 
         return action_description, reward
 
@@ -155,27 +181,30 @@ class RampupEnv(gym.Env):
         self.done = bool(self.state_time == self.timeframe - 1)
         info = {}
         if self.verbose:
-            print(f'Action taken: {action_description}')
+            print(f"Action taken: {action_description}")
         self.total_reward += reward
 
         if self.fill_table:
-            self.table.at[self.state_time,
-                          'Current demand'] = self.demand[self.state_time]
+            self.episode_table.at[self.state_time, "Current demand"] = self.demand[
+                self.state_time
+            ]
             try:
-                self.table.at[self.state_time,
-                              'Next demand'] = self.demand[self.state_time + 1]
+                self.episode_table.at[self.state_time, "Next demand"] = self.demand[
+                    self.state_time + 1
+                ]
             except IndexError:
                 pass
-            self.table.at[self.state_time, 'Action'] = action
-            self.table.at[self.state_time,
-                          'Action description'] = action_description
-            self.table.at[self.state_time, 'Reward'] = reward
+            self.episode_table.at[self.state_time, "Action"] = action
+            self.episode_table.at[
+                self.state_time, "Action description"
+            ] = action_description
+            self.episode_table.at[self.state_time, "Reward"] = reward
 
         return obs, reward, self.done, info
 
     def render(self):
         # if self.verbose:
-        print(f'Reward so far: {self.total_reward}')
+        print(f"Reward so far: {self.total_reward}")
 
     def reset(self):
         # Blank reset
@@ -206,8 +235,7 @@ class RampupEnv(gym.Env):
         if initial_state_status is not None:
             # Dummy var to 1 for chosen initial status
             self.obs_dummy_status[initial_state_status][0] = 1
-            action_description, reward = self._translate_action(
-                initial_state_status)
+            action_description, reward = self._translate_action(initial_state_status)
             self.obs_last_legal_status = initial_state_status
         else:
             reward = 0
@@ -215,17 +243,20 @@ class RampupEnv(gym.Env):
         self.total_reward = reward
 
         if self.fill_table:
-            self.table.at[self.state_time,
-                          'Current demand'] = self.demand[self.state_time]
+            self.episode_table.at[self.state_time, "Current demand"] = self.demand[
+                self.state_time
+            ]
             try:
-                self.table.at[self.state_time,
-                              'Next demand'] = self.demand[self.state_time + 1]
+                self.episode_table.at[self.state_time, "Next demand"] = self.demand[
+                    self.state_time + 1
+                ]
             except IndexError:
                 pass
-            self.table.at[self.state_time, 'Action'] = initial_state_status
+            self.episode_table.at[self.state_time, "Action"] = initial_state_status
             if initial_state_status is not None:
-                self.table.at[self.state_time,
-                              'Action description'] = action_description
-            self.table.at[self.state_time, 'Reward'] = self.total_reward
+                self.episode_table.at[
+                    self.state_time, "Action description"
+                ] = action_description
+            self.episode_table.at[self.state_time, "Reward"] = self.total_reward
 
         return self._retrieve_obs()

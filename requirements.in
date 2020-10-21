@@ -1,9 +1,11 @@
+black
 jupytext
 matplotlib
 notebook
 numpy
 pandas
+pre-commit
 sklearn
 stable-baselines3==0.9.0
 tensorboard
-yapf
+# yapf

@@ -42,11 +42,11 @@ demand.show(only_data=True)
 env = RampupEnv(demand.data)
 
 # %%
-algorithm = 'A2C'
+algorithm = "A2C"
 # algorithm = 'PPO'
 timesteps = 20000
 tensorboard_log = "logs/rampup_tensorboard/"
-tb_log_suffix = f'0-255_{str(timesteps)[:-3]}k' # + 'illegal_random_legal'
+tb_log_suffix = f"0-255_{str(timesteps)[:-3]}k"  # + 'illegal_random_legal'
 tb_log_suffix
 
 # %% [markdown]
@@ -54,21 +54,27 @@ tb_log_suffix
 
 # %%
 deterministic = False
-model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=tensorboard_log)
+model = A2C("MlpPolicy", env, verbose=1, tensorboard_log=tensorboard_log)
 
 # %%
 # %%time
-if algorithm == 'A2C':
+if algorithm == "A2C":
     deterministic = False
-    model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=tensorboard_log)
-    model.learn(total_timesteps=timesteps, eval_freq=100,
-                tb_log_name=f"A2C_train_run_{tb_log_suffix}") #, reset_num_timesteps=False)
+    model = A2C("MlpPolicy", env, verbose=1, tensorboard_log=tensorboard_log)
+    model.learn(
+        total_timesteps=timesteps,
+        eval_freq=100,
+        tb_log_name=f"A2C_train_run_{tb_log_suffix}",
+    )  # , reset_num_timesteps=False)
 
-if algorithm == 'PPO':
+if algorithm == "PPO":
     deterministic = True
-    model = PPO('MlpPolicy', env, verbose=1, tensorboard_log=tensorboard_log)
-    model.learn(total_timesteps=timesteps, log_interval=1,
-                tb_log_name=f"PPO_train_run_{tb_log_suffix}")
+    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=tensorboard_log)
+    model.learn(
+        total_timesteps=timesteps,
+        log_interval=1,
+        tb_log_name=f"PPO_train_run_{tb_log_suffix}",
+    )
 
 # %% [markdown]
 # ### Simple Evaluation
@@ -90,19 +96,31 @@ env.table
 # eval_env = RampupEnv(demand.data)
 eval_env = env
 # Use deterministic actions for evaluation (that seems like #bs)
-eval_callback = EvalCallback(eval_env, best_model_save_path='./logs/',
-                             log_path='./logs/', eval_freq=100,
-                             deterministic=deterministic, render=False)
+eval_callback = EvalCallback(
+    eval_env,
+    best_model_save_path="./logs/",
+    log_path="./logs/",
+    eval_freq=100,
+    deterministic=deterministic,
+    render=False,
+)
 
-if algorithm == 'A2C':
-    eval_model = A2C('MlpPolicy', eval_env, verbose=1, tensorboard_log=tensorboard_log)
-    eval_model.learn(total_timesteps=timesteps, callback=eval_callback,
-                     tb_log_name=f"A2C_eval_run_{tb_log_suffix}")
+if algorithm == "A2C":
+    eval_model = A2C("MlpPolicy", eval_env, verbose=1, tensorboard_log=tensorboard_log)
+    eval_model.learn(
+        total_timesteps=timesteps,
+        callback=eval_callback,
+        tb_log_name=f"A2C_eval_run_{tb_log_suffix}",
+    )
 
-if algorithm == 'PPO':
-    eval_model = PPO('MlpPolicy', eval_env, verbose=1, tensorboard_log=tensorboard_log)
-    eval_model.learn(total_timesteps=timesteps, callback=eval_callback, log_interval=1,
-                     tb_log_name=f"PPO_eval_run_{tb_log_suffix}")
+if algorithm == "PPO":
+    eval_model = PPO("MlpPolicy", eval_env, verbose=1, tensorboard_log=tensorboard_log)
+    eval_model.learn(
+        total_timesteps=timesteps,
+        callback=eval_callback,
+        log_interval=1,
+        tb_log_name=f"PPO_eval_run_{tb_log_suffix}",
+    )
 
 # %%
 eval_env.fill_table = True
@@ -121,10 +139,12 @@ evaluate_policy(eval_model, eval_env)
 # Start Tensorboard on port 6006 and open it in a browser.
 
 # %%
-if 1==0:
-    pid = subprocess.Popen(['tensorboard', '--logdir', f'./{tensorboard_log}', '--port', '6006'])
-    os.system('sleep 5')
-    webbrowser.open('http://localhost:6006')
+if 1 == 0:
+    pid = subprocess.Popen(
+        ["tensorboard", "--logdir", f"./{tensorboard_log}", "--port", "6006"]
+    )
+    os.system("sleep 5")
+    webbrowser.open("http://localhost:6006")
 
 # %%
 # Alternatively, load the TensorBoard notebook extension
@@ -135,7 +155,7 @@ if 1==0:
 # To wrap up, kill the Tensorboard process.
 
 # %%
-if 1==0:
-    os.system('kill -9 $(lsof -t -i:6006)')
+if 1 == 0:
+    os.system("kill -9 $(lsof -t -i:6006)")
 
 # %%

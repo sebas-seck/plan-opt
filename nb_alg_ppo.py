@@ -39,7 +39,7 @@ env = RampupEnv(demand=D.data)
 
 # %%
 # %%time
-model = PPO('MlpPolicy', env, verbose=1)
+model = PPO("MlpPolicy", env, verbose=1)
 model.learn(total_timesteps=2500)
 
 # %% [markdown]

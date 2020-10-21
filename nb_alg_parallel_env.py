@@ -33,6 +33,7 @@ from plan_opt.envs.rampup1 import RampupEnv
 
 # %%
 import plan_opt
+
 env_id = "plan-opt-v0"
 num_cpu = 4  # Number of processes to use
 env = make_vec_env(env_id, n_envs=num_cpu)
@@ -40,7 +41,7 @@ env = make_vec_env(env_id, n_envs=num_cpu)
 # %%
 timesteps = 20000
 tensorboard_log = "logs/rampup_tensorboard/"
-tb_log_suffix = f'0-255_{str(timesteps)[:-3]}k_vec_env{num_cpu}'
+tb_log_suffix = f"0-255_{str(timesteps)[:-3]}k_vec_env{num_cpu}"
 tb_log_suffix
 
 # %% [markdown]
@@ -49,9 +50,12 @@ tb_log_suffix
 # %%
 # %%time
 deterministic = False
-model = A2C('MlpPolicy', env, verbose=1, tensorboard_log=tensorboard_log)
-model.learn(total_timesteps=timesteps, eval_freq=100,
-            tb_log_name=f"A2C_train_run_{tb_log_suffix}") #, reset_num_timesteps=False)
+model = A2C("MlpPolicy", env, verbose=1, tensorboard_log=tensorboard_log)
+model.learn(
+    total_timesteps=timesteps,
+    eval_freq=100,
+    tb_log_name=f"A2C_train_run_{tb_log_suffix}",
+)  # , reset_num_timesteps=False)
 
 # %% [markdown]
 # ### Evaluation
@@ -64,13 +68,21 @@ demand.show(only_data=True)
 # %%
 # Separate evaluation env
 eval_env = RampupEnv(demand.data)
-eval_callback = EvalCallback(eval_env, best_model_save_path='./logs/',
-                             log_path='./logs/', eval_freq=100,
-                             deterministic=deterministic, render=False)
+eval_callback = EvalCallback(
+    eval_env,
+    best_model_save_path="./logs/",
+    log_path="./logs/",
+    eval_freq=100,
+    deterministic=deterministic,
+    render=False,
+)
 
-eval_model = A2C('MlpPolicy', eval_env, verbose=1, tensorboard_log=tensorboard_log)
-eval_model.learn(total_timesteps=timesteps, callback=eval_callback,
-                 tb_log_name=f"A2C_eval_run_{tb_log_suffix}")
+eval_model = A2C("MlpPolicy", eval_env, verbose=1, tensorboard_log=tensorboard_log)
+eval_model.learn(
+    total_timesteps=timesteps,
+    callback=eval_callback,
+    tb_log_name=f"A2C_eval_run_{tb_log_suffix}",
+)
 
 # %%
 eval_env.fill_table = True
@@ -89,10 +101,12 @@ evaluate_policy(eval_model, eval_env)
 # Start Tensorboard on port 6006 and open it in a browser.
 
 # %%
-if 1==0:
-    pid = subprocess.Popen(['tensorboard', '--logdir', f'./{tensorboard_log}', '--port', '6006'])
-    os.system('sleep 5')
-    webbrowser.open('http://localhost:6006')
+if 1 == 0:
+    pid = subprocess.Popen(
+        ["tensorboard", "--logdir", f"./{tensorboard_log}", "--port", "6006"]
+    )
+    os.system("sleep 5")
+    webbrowser.open("http://localhost:6006")
 
 # %%
 # Alternatively, load the TensorBoard notebook extension
@@ -103,7 +117,7 @@ if 1==0:
 # To wrap up, kill the Tensorboard process.
 
 # %%
-if 1==0:
-    os.system('kill -9 $(lsof -t -i:6006)')
+if 1 == 0:
+    os.system("kill -9 $(lsof -t -i:6006)")
 
 # %%

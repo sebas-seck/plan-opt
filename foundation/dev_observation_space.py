@@ -27,17 +27,17 @@ print(s1)
 s1.sample()
 
 # %%
-s2 = spaces.Tuple((spaces.Discrete(4), spaces.Box(0,1,[28])))
+s2 = spaces.Tuple((spaces.Discrete(4), spaces.Box(0, 1, [28])))
 print(s2)
 s2.sample()
 
 # %%
-s3 = spaces.Tuple((spaces.Discrete(4), spaces.Discrete(28), spaces.Box(0,1,[28])))
+s3 = spaces.Tuple((spaces.Discrete(4), spaces.Discrete(28), spaces.Box(0, 1, [28])))
 print(s3)
 s3.sample()
 
 # %%
-s4 = spaces.Box(0,1,[1])
+s4 = spaces.Box(0, 1, [1])
 print(s4)
 s4.sample()
 
@@ -48,12 +48,12 @@ s5.sample()
 
 # %%
 # 2 resources, 5 features (normalized demand and dummy encoded status), horizon of 28
-s6 = spaces.Box(0,1,[5, 2, 28], dtype=np.float32)
+s6 = spaces.Box(0, 1, [5, 2, 28], dtype=np.float32)
 print(s6)
 s6.sample()
 
 # %%
 # 2 resources, 5 features (normalized demand and dummy encoded status), horizon of 28
-s7 = spaces.Box(0,1,[2, 4, 28], dtype=np.float32)
+s7 = spaces.Box(0, 1, [2, 4, 28], dtype=np.float32)
 print(s7)
 s7.sample()
