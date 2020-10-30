@@ -12,6 +12,10 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # 2 Development of Synthetic Demand
+# Building a synthetic demand function from an assumed near-standstill is approached by stacking various streched cosines, data points are then randomly chosen through stacking various distributions around the demand function.
+
 # %%
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,17 +25,13 @@ import matplotlib.pyplot as plt
 pylab.rcParams["figure.figsize"] = (15, 6)
 
 # %% [markdown]
-# # Demand
-# Building a synthetic demand function from an assumed near-standstill is done by stacking various curves. Peaks are generated with stretched cosines,and outlierduced  wi
-# ### Building a synthetic demand function from an assumed near-standstill
-# Peaks can be generated with strechted cosines,
+# ## Demand Curve
+# ### General Parameters
 
 # %%
 years = 3
 N = 365 * years
 x = np.arange(1, N)
-
-# %%
 np.random.seed(416)
 
 # %% [markdown]
@@ -100,7 +100,7 @@ plt.plot(x, y_all)
 plt.show()
 
 # %% [markdown]
-# ## Now generate some sensible distribution around them
+# ## Data around Demand Curve
 # ### Poisson
 # Sensible with fluctuations at both ends
 
@@ -151,7 +151,7 @@ plt.scatter(x, y, alpha=0.5)
 plt.show()
 
 # %% [markdown]
-# ## Combined Synthetic Demand
+# ### Combined Synthetic Demand
 
 # %%
 y = y_all + y_poisson + y_gamma + y_cauchy - np.mean(y_cauchy)
@@ -201,8 +201,7 @@ plt.scatter(x, y, alpha=0.5)
 plt.show()
 
 # %% [markdown]
-# # Combination of all with sudden change
-# ## with sudden change
+# ### Combined Synthetic Demand with Sudden Change
 
 # %%
 y = y_all + y_poisson + y_gamma + y_cauchy - np.mean(y_cauchy)

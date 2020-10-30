@@ -13,13 +13,13 @@
 # ---
 
 # %% [markdown]
-# ## Environment Check
+# # 5 `rampup-v1` Environment Check with SB3
 # Stable Baselines3 offers an [environment checker](https://stable-baselines3.readthedocs.io/en/master/common/env_checker.html?highlight=check_env) to test an environment for conformity with the Gym API. Warnings are returned if the environment does not conform.
 
 # %%
 import numpy as np
 from plan_opt.demand import Demand
-from plan_opt.envs.rampup1 import RampupEnv
+from plan_opt.envs.rampup1 import RampupEnv1
 from stable_baselines3.common.env_checker import check_env
 
 # %%
@@ -28,7 +28,7 @@ D.generate_demand()
 D.add_sudden_change()
 
 # %%
-env = RampupEnv(demand=D.data)
+env = RampupEnv1(demand=D)
 
 # %%
 a = env.observation_space.sample()

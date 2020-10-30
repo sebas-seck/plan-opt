@@ -12,6 +12,9 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # 4 Review of a Minimal, SB3-compatible Environment `rampup-v1` with A2C
+
 # %%
 import os
 import subprocess
@@ -26,7 +29,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 from plan_opt.demand import Demand
 from plan_opt.demand_small_samples import four_weeks_uprising
-from plan_opt.envs.rampup1 import RampupEnv
+from plan_opt.envs.rampup1 import RampupEnv1
 
 # %% [markdown]
 # ### Preparation
@@ -38,43 +41,31 @@ from plan_opt.envs.rampup1 import RampupEnv
 demand = Demand(period=len(four_weeks_uprising), data=four_weeks_uprising)
 demand.show(only_data=True)
 
+# %% [markdown]
+# Altough the environment is registered with Gym as 'rampup-v1', it is imported straight from the module here. See notebook 05 using the registration with Gym.
+
 # %%
-env = RampupEnv(demand.data)
+env = RampupEnv1(demand)
 
 # %%
 algorithm = "A2C"
-# algorithm = 'PPO'
 timesteps = 20000
 tensorboard_log = "logs/rampup_tensorboard/"
-tb_log_suffix = f"0-255_{str(timesteps)[:-3]}k"  # + 'illegal_random_legal'
-tb_log_suffix
+tb_log_suffix = f"{str(timesteps)[:-3]}k"
+print(f"Tensorboard logs saved with suffix {tb_log_suffix}")
 
 # %% [markdown]
 # ### Train the model
 
 # %%
-deterministic = False
-model = A2C("MlpPolicy", env, verbose=1, tensorboard_log=tensorboard_log)
-
-# %%
 # %%time
-if algorithm == "A2C":
-    deterministic = False
-    model = A2C("MlpPolicy", env, verbose=1, tensorboard_log=tensorboard_log)
-    model.learn(
-        total_timesteps=timesteps,
-        eval_freq=100,
-        tb_log_name=f"A2C_train_run_{tb_log_suffix}",
-    )  # , reset_num_timesteps=False)
-
-if algorithm == "PPO":
-    deterministic = True
-    model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=tensorboard_log)
-    model.learn(
-        total_timesteps=timesteps,
-        log_interval=1,
-        tb_log_name=f"PPO_train_run_{tb_log_suffix}",
-    )
+deterministic = False
+model = A2C("MlpPolicy", env, tensorboard_log=tensorboard_log, verbose=1)
+model.learn(
+    total_timesteps=timesteps,
+    eval_freq=100,
+    tb_log_name=f"A2C_train_run_{tb_log_suffix}",
+)
 
 # %% [markdown]
 # ### Simple Evaluation
@@ -86,14 +77,14 @@ while not env.done:
     action, _states = model.predict(obs, deterministic=deterministic)
     obs, reward, done, info = env.step(action)
 env.render()
-env.table
+env.episode_table
 
 # %% [markdown]
 # ## Evaluation
 
 # %%
 # Separate evaluation env
-# eval_env = RampupEnv(demand.data)
+# eval_env = RampupEnv1(demand)
 eval_env = env
 # Use deterministic actions for evaluation (that seems like #bs)
 eval_callback = EvalCallback(
@@ -105,22 +96,12 @@ eval_callback = EvalCallback(
     render=False,
 )
 
-if algorithm == "A2C":
-    eval_model = A2C("MlpPolicy", eval_env, verbose=1, tensorboard_log=tensorboard_log)
-    eval_model.learn(
-        total_timesteps=timesteps,
-        callback=eval_callback,
-        tb_log_name=f"A2C_eval_run_{tb_log_suffix}",
-    )
-
-if algorithm == "PPO":
-    eval_model = PPO("MlpPolicy", eval_env, verbose=1, tensorboard_log=tensorboard_log)
-    eval_model.learn(
-        total_timesteps=timesteps,
-        callback=eval_callback,
-        log_interval=1,
-        tb_log_name=f"PPO_eval_run_{tb_log_suffix}",
-    )
+eval_model = A2C("MlpPolicy", eval_env, tensorboard_log=tensorboard_log, verbose=1)
+eval_model.learn(
+    total_timesteps=timesteps,
+    callback=eval_callback,
+    tb_log_name=f"A2C_eval_run_{tb_log_suffix}",
+)
 
 # %%
 eval_env.fill_table = True
@@ -129,10 +110,13 @@ while not eval_env.done:
     action, _states = eval_model.predict(obs, deterministic=True)
     obs, reward, done, info = eval_env.step(action)
 eval_env.render()
-eval_env.table
+eval_env.episode_table
 
 # %%
-evaluate_policy(eval_model, eval_env)
+mean_reward, std_reward = evaluate_policy(eval_model, eval_env)
+print(
+    f"Policy evaluated for 10 episodes with a mean reward of {int(mean_reward)} and a standard deviation of {int(std_reward)}."
+)
 
 # %% [markdown]
 # ### Tensorboard

@@ -1,5 +1,13 @@
 from gym.envs.registration import register
 
 register(
-    id="plan-opt-v0", entry_point="plan_opt.envs:RampupEnv",
+    id="rampup-v0", entry_point="plan_opt.envs:RampupEnv0",
+)
+
+register(
+    id="rampup-v1", entry_point="plan_opt.envs:RampupEnv1",
+)
+
+register(
+    id="rampup-v2", entry_point="plan_opt.envs:RampupEnv2",
 )

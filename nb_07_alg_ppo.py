@@ -12,13 +12,16 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # 7 Review of `rampup-v1` with SB3's PPO implementation
+
 # %%
 import numpy as np
 import gym
 from gym import spaces
 from stable_baselines3 import PPO
 from plan_opt.demand import Demand
-from plan_opt.envs.rampup1 import RampupEnv
+from plan_opt.envs.rampup1 import RampupEnv1 as RampupEnv
 
 # %%
 D = Demand(seed=3348)
@@ -32,7 +35,7 @@ D.show()
 # The action space is descrete, only categorical changes of equipment are allowed.
 
 # %%
-env = RampupEnv(demand=D.data)
+env = RampupEnv(demand=D)
 
 # %% [markdown]
 # ### Train the model

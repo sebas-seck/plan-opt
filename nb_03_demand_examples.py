@@ -12,6 +12,10 @@
 #     name: python3
 # ---
 
+# %% [markdown]
+# # 3 Demand Examples
+# Selection of Demand instances with different seeds, sudden changes and some completely random instances.
+
 # %%
 # %load_ext autoreload
 # %autoreload 2
@@ -22,7 +26,7 @@ pylab.rcParams["figure.figsize"] = (15, 6)
 from plan_opt.demand import Demand
 
 # %% [markdown]
-# # Seeded Sample Demands
+# ## Seeded Sample Demands
 
 # %%
 a = Demand(seed=612)
@@ -55,7 +59,7 @@ e.info()
 e.show()
 
 # %% [markdown]
-# # Seeded Sample Demand with Sudden Change
+# ## Seeded Sample Demand with Sudden Change
 
 # %%
 w = Demand(seed=1256)
@@ -72,7 +76,7 @@ v.info()
 v.show()
 
 # %% [markdown]
-# # Multiple Random Sample Demands
+# ## Multiple Random Sample Demands
 
 # %%
 demand_dict = {}
@@ -82,7 +86,5 @@ for i in range(10):
     demand_dict[i].apply_sudden(probability=0.8)
     demand_dict[i].info()
     demand_dict[i].show()
-
-# %%
 
 # %%

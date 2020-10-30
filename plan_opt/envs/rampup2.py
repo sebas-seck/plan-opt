@@ -3,6 +3,7 @@
 import random
 import textwrap
 import gym
+from gym.core import ActionWrapper
 import numpy as np
 import pandas as pd
 from gym import spaces
@@ -23,7 +24,7 @@ LEGAL_CHANGES = {
 }
 
 
-class RampupEnv1(gym.Env):
+class RampupEnv2(gym.Env):
     """Implements an environment to run ramp-up simulations.
 
     Environment follows the gym interface.
@@ -52,7 +53,7 @@ class RampupEnv1(gym.Env):
         total_reward (int): Reward accumulated up to the current timestep.
         reward_range (Tuple[int, int]): Range of possible rewards.
         action_features (int): Number of unique actions.
-        features (int): Total number of features.
+        features (int): Total number of features: Actions and demand.
         state_time (int): Time component of state. Logically, also
             referred to as (current) timestep.
         state_status (numpy.ndarray): Status component of state (current
@@ -74,8 +75,24 @@ class RampupEnv1(gym.Env):
         verbose (bool):
     """
 
+    @classmethod
+    def create(cls, demand=None, timeframe=0, verbose=False):
+        """Initializes object with specified parameters.
+
+        Args:
+            demand (Demand, optional): Instance of demand data.
+                Defaults to None.
+        timeframe (int, optional): Total timeframe (in days) under
+            observation. Defaults to 0.
+        verbose (bool, optional): Defaults to False.
+
+        Returns:
+            RampupEnv2: Instance of `RampupEnv2`.
+        """
+        return RampupEnv2(demand, timeframe, verbose)
+
     def __init__(self, demand=None, timeframe=0, verbose=False):
-        super(RampupEnv1, self).__init__()
+        super(RampupEnv2, self).__init__()
 
         if demand is None:
             demand = Demand()
@@ -92,7 +109,7 @@ class RampupEnv1(gym.Env):
         self.fill_table = False
         self.episode_table = pd.DataFrame()
         self.total_reward = 0
-        self.reward_range = (-3000, 15000)
+        self.reward_range = (-28000, 15000)
         self.action_features = len(ACTION_LIST)
         self.features = self.action_features + 1
         self.state_time = 0
@@ -161,16 +178,22 @@ class RampupEnv1(gym.Env):
 
     def step(self, action):
 
+        # OLD THOUGHTS
         # if action not in LEGAL_CHANGES[self.obs_last_legal_status]:
         #     # Illegal action, pick another random legal action!
         #     action = random.sample(LEGAL_CHANGES[self.obs_last_legal_status],
         #                            1)[0]
 
+        # action_illegal = action not in LEGAL_CHANGES[self.obs_last_legal_status]
+        # if action_illegal:
+        #     # Repeat last action if illegal action is chosen :)
+        #     action = self.obs_last_legal_status
+
         # Increment time component of state
         self.state_time += 1
         action_description, reward = self._translate_action(action)
-        # if action not in LEGAL_CHANGES[self.obs_last_legal_status]:
-        #     reward = -250000
+        # if action_illegal:
+        #     reward += -25000
         self.obs_last_legal_status = action
         # Adjust the status component of state
         self.obs_dummy_status[action][self.state_time] = 1
@@ -203,8 +226,8 @@ class RampupEnv1(gym.Env):
 
     def render(self):
         # if self.verbose:
-        economic_potential = self.demand.economic_potential()
-        lost_potential = economic_potential - self.total_reward
+        economic_potential = self.demand.economic_potential_no_illegal()
+        lost_potential = economic_potential - max(self.total_reward, 0)
         lost_potential_perc = round(lost_potential / economic_potential * 100, 4)
         print(
             textwrap.dedent(

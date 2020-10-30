@@ -37,13 +37,14 @@ class Demand:
             demand curve
     """
 
-    def __init__(self, period=365 * 3, seed=None, data=None):
+    def __init__(self, period=365 * 3, seed=None, data=None, verbose=0):
         self.period = period
         self.x = np.arange(1, period + 1)
         if seed is None:
-            self.seed = np.random.seed(np.random.randint(0, 10000))
+            self.seed = np.random.randint(0, 10000)
         else:
-            self.seed = np.random.seed(seed)
+            self.seed = seed
+        np.random.seed(self.seed)
 
         self.has_sudden_change = None
         self.sc_magnitude = None
@@ -53,6 +54,7 @@ class Demand:
 
         self.y_all = None
         self.data = data
+        self.verbose = verbose
 
     def generate_demand(self):
         # create multiple curves for different seasonalities & patterns
@@ -166,3 +168,71 @@ class Demand:
             print(
                 f"Sudden change:\n    Start: {self.sc_start}\n    Magnitude: {self.sc_magnitude}\n    Steepness: {self.sc_steepness}\n    Direction: {self.sc_direction}"
             )
+
+    def economic_potential(
+        self, profit_threshold=80, static_profit=15000, static_loss=500
+    ):
+        """Derives economic potential from demand data.
+
+        This simple calculation merely takes data points above the
+        profit_threshold and multiplies those with static_profit. Data
+        points below the threshold are assigned the static_loss.
+        Combined, this make the economic potential.
+
+        Args:
+            profit_threshold (int, optional): Profit is assumed to be
+                made at demand greater or equal to the
+                profit_threshold. Defaults to 80.
+            static_profit (int, optional): Profit assumed if threshold
+                is reached. Defaults to 15000.
+            static_loss (int, optional): Loss assumed if threshold is
+                not reached. Defaults to 500.
+
+        Returns:
+            economic_potential (int): Sales potential offset by the loss
+            potential.
+        """
+        event_over_threshold = sum([i >= profit_threshold for i in self.data])
+        event_below_threshold = len(self.data) - event_over_threshold
+        sales_potential = event_over_threshold * static_profit
+        loss_potential = event_below_threshold * static_loss
+        economic_potential = sales_potential - loss_potential
+
+        return economic_potential
+
+    def economic_potential_no_illegal(self):
+
+        reward_per_action = {0: 15000, 1: -2000, 2: -1000, 3: -500}
+
+        reward = -500
+        action = 3
+        data = np.append(self.data, [0, 0, 0])
+        for i in range(len(data) - 3):
+            #     prepare_in_3 = a[i+3]>80
+            prepare_in_2 = data[i + 2] > 80
+            prepare_in_1 = data[i + 1] > 80
+            prepare_now = data[i] > 80
+
+            # In anticipation of demand
+            if prepare_in_2 and action == 3:
+                action = 2
+
+            elif prepare_in_1 and action == 2:
+                action = 1
+
+            elif prepare_now and action == 1:
+                action = 0
+
+            # After demand
+            elif not prepare_now and action == 0:
+                if prepare_in_1:
+                    action = 1
+                else:
+                    action = 2
+
+            reward += reward_per_action[action]
+
+            if self.verbose == 2:
+                print(data[i], prepare_in_2, prepare_in_1, prepare_now, action)
+
+        return reward
