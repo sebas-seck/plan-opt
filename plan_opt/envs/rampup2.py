@@ -24,7 +24,7 @@ LEGAL_CHANGES = {
 }
 
 
-class RampupEnv1(gym.Env):
+class RampupEnv2(gym.Env):
     """Implements an environment to run ramp-up simulations.
 
     Environment follows the gym interface.
@@ -87,12 +87,12 @@ class RampupEnv1(gym.Env):
         verbose (bool, optional): Defaults to False.
 
         Returns:
-            RampupEnv1: Instance of `RampupEnv1`.
+            RampupEnv2: Instance of `RampupEnv2`.
         """
-        return RampupEnv1(demand, timeframe, verbose)
+        return RampupEnv2(demand, timeframe, verbose)
 
     def __init__(self, demand=None, timeframe=0, verbose=False):
-        super(RampupEnv1, self).__init__()
+        super(RampupEnv2, self).__init__()
 
         if demand is None:
             demand = Demand()
@@ -197,9 +197,22 @@ class RampupEnv1(gym.Env):
 
     def step(self, action):
 
+        # OLD THOUGHTS
+        # if action not in LEGAL_CHANGES[self.obs_last_legal_status]:
+        #     # Illegal action, pick another random legal action!
+        #     action = random.sample(LEGAL_CHANGES[self.obs_last_legal_status],
+        #                            1)[0]
+
+        # action_illegal = action not in LEGAL_CHANGES[self.obs_last_legal_status]
+        # if action_illegal:
+        #     # Repeat last action if illegal action is chosen :)
+        #     action = self.obs_last_legal_status
+
         # Increment time component of state
         self.state_time += 1
         action_description, reward = self._translate_action(action)
+        # if action_illegal:
+        #     reward += -25000
         self.obs_last_legal_status = action
         # Adjust the status component of state
         self.obs_dummy_status[action][self.state_time] = 1
@@ -231,18 +244,7 @@ class RampupEnv1(gym.Env):
         return obs, reward, self.done, info
 
     def render(self):
-        # if self.verbose:
-        economic_potential = self.demand.economic_potential_no_illegal()
-        lost_potential = economic_potential - max(self.total_reward, 0)
-        lost_potential_perc = round(lost_potential / economic_potential * 100, 4)
-        print(
-            textwrap.dedent(
-                f"""            Reward so far: {self.total_reward}
-            Economic potential: {economic_potential}
-            Lost potential: {lost_potential} ({lost_potential_perc}%)
-            """
-            )
-        )
+        print(f"Reward so far: {self.total_reward}")
 
     def reset(self):
         # Blank reset

@@ -8,6 +8,6 @@ register(
     id="rampup-v1", entry_point="plan_opt.envs:RampupEnv1",
 )
 
-# register(
-#     id="rampup-v1", entry_point="plan_opt.envs:RampupEnv2",
-# )
+register(
+    id="rampup-v2", entry_point="plan_opt.envs:RampupEnv2",
+)
