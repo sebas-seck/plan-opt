@@ -1,4 +1,5 @@
 black
+gym
 jupytext
 matplotlib
 notebook

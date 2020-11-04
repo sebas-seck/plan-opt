@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: py:percent,ipynb
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -13,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 7 Review of `rampup-v1` with SB3's PPO implementation
+# # 8 Review of `rampup-v1` with SB3's PPO implementation
 
 # %%
 import numpy as np

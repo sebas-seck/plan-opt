@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: py:percent,ipynb
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -13,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 4 Review of a Minimal, SB3-compatible Environment `rampup-v1` with A2C
+# # 5 Review of a Minimal, SB3-compatible Environment `rampup-v1` with A2C
 
 # %%
 import os

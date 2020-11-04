@@ -27,7 +27,7 @@ future==0.18.2            # via pyglet, torch
 google-auth-oauthlib==0.4.1  # via tensorboard
 google-auth==1.19.1       # via google-auth-oauthlib, tensorboard
 grpcio==1.30.0            # via tensorboard
-gym==0.17.2               # via stable-baselines3
+gym==0.17.2               # via -r requirements.in, stable-baselines3
 identify==1.5.6           # via pre-commit
 idna==2.9                 # via requests
 ipykernel==5.3.0          # via notebook

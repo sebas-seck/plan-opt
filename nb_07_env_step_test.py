@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: py:percent,ipynb
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -13,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 6 `rampup-v1` Step Test
+# # 7 `rampup-v1` Step Test
 # Brief notebook to review variables returned after each step.
 
 # %%

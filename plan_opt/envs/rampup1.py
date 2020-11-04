@@ -3,6 +3,7 @@
 import random
 import textwrap
 import gym
+from gym.core import ActionWrapper
 import numpy as np
 import pandas as pd
 from gym import spaces
@@ -52,7 +53,7 @@ class RampupEnv1(gym.Env):
         total_reward (int): Reward accumulated up to the current timestep.
         reward_range (Tuple[int, int]): Range of possible rewards.
         action_features (int): Number of unique actions.
-        features (int): Total number of features.
+        features (int): Total number of features: Actions and demand.
         state_time (int): Time component of state. Logically, also
             referred to as (current) timestep.
         state_status (numpy.ndarray): Status component of state (current
@@ -74,6 +75,22 @@ class RampupEnv1(gym.Env):
         verbose (bool):
     """
 
+    @classmethod
+    def create(cls, demand=None, timeframe=0, verbose=False):
+        """Initializes object with specified parameters.
+
+        Args:
+            demand (Demand, optional): Instance of demand data.
+                Defaults to None.
+        timeframe (int, optional): Total timeframe (in days) under
+            observation. Defaults to 0.
+        verbose (bool, optional): Defaults to False.
+
+        Returns:
+            RampupEnv1: Instance of `RampupEnv1`.
+        """
+        return RampupEnv1(demand, timeframe, verbose)
+
     def __init__(self, demand=None, timeframe=0, verbose=False):
         super(RampupEnv1, self).__init__()
 
@@ -86,21 +103,21 @@ class RampupEnv1(gym.Env):
             timeframe = len(self.demand.data)
         self.timeframe = timeframe
 
-        self.horizon = 5
+        self.horizon = 3
         self.fleet_size = 1
         self.done = None
         self.fill_table = False
         self.episode_table = pd.DataFrame()
         self.total_reward = 0
-        self.reward_range = (-3000, 15000)
+        self.reward_range = (-28000, 15000)
         self.action_features = len(ACTION_LIST)
         self.features = self.action_features + 1
         self.state_time = 0
         self.state_status = np.array(np.zeros(timeframe), dtype=np.uint8, ndmin=2)
         self.action_space = spaces.Discrete(self.action_features)
         self.observation_space = spaces.Box(
-            low=0,
-            high=254,
+            low=self._generate_obs_space_HL("low"),
+            high=self._generate_obs_space_HL("high"),
             shape=[self.fleet_size, self.features, self.horizon],
             dtype=np.uint8,
         )
@@ -115,6 +132,25 @@ class RampupEnv1(gym.Env):
         self.obs_last_legal_status = None
         self.total_reward = 0
         self.verbose = verbose
+
+    def _generate_obs_space_HL(self, bound_hl):
+        if bound_hl == "low":
+            bound = 0
+        else:
+            bound = 1
+        obs_hl = [[]] * self.fleet_size
+        l = [[]] * self.features
+        for i in range(self.fleet_size):
+
+            for j in range(self.features):
+                # only the first feature goes up to 255
+                if j == 0 and bound_hl == "high":
+                    bound = 255
+                elif bound_hl == "high":
+                    bound = 1
+                l[j] = [bound] * self.horizon
+            obs_hl[i] = l
+        return np.array(obs_hl, dtype=np.uint8)
 
     def _generate_dummy_status(self):
         self.obs_dummy_status = {}
@@ -161,16 +197,22 @@ class RampupEnv1(gym.Env):
 
     def step(self, action):
 
+        # OLD THOUGHTS
         # if action not in LEGAL_CHANGES[self.obs_last_legal_status]:
         #     # Illegal action, pick another random legal action!
         #     action = random.sample(LEGAL_CHANGES[self.obs_last_legal_status],
         #                            1)[0]
 
+        # action_illegal = action not in LEGAL_CHANGES[self.obs_last_legal_status]
+        # if action_illegal:
+        #     # Repeat last action if illegal action is chosen :)
+        #     action = self.obs_last_legal_status
+
         # Increment time component of state
         self.state_time += 1
         action_description, reward = self._translate_action(action)
-        # if action not in LEGAL_CHANGES[self.obs_last_legal_status]:
-        #     reward = -250000
+        # if action_illegal:
+        #     reward += -25000
         self.obs_last_legal_status = action
         # Adjust the status component of state
         self.obs_dummy_status[action][self.state_time] = 1
@@ -203,8 +245,8 @@ class RampupEnv1(gym.Env):
 
     def render(self):
         # if self.verbose:
-        economic_potential = self.demand.economic_potential()
-        lost_potential = economic_potential - self.total_reward
+        economic_potential = self.demand.economic_potential_no_illegal()
+        lost_potential = economic_potential - max(self.total_reward, 0)
         lost_potential_perc = round(lost_potential / economic_potential * 100, 4)
         print(
             textwrap.dedent(
@@ -219,7 +261,7 @@ class RampupEnv1(gym.Env):
         # Blank reset
         self._set_initial_state()
         # Choose a random start point
-        self.state_time = np.random.randint(0, self.timeframe - 1)
+        self.state_time = np.random.randint(0, self.timeframe - 2)
         self.done = bool(self.state_time == self.timeframe - 1)
         random_status = np.random.randint(0, self.action_features)
         self.obs_dummy_status[random_status][self.state_time] = 1

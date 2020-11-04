@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: py:percent,ipynb
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -13,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 5 `rampup-v1` Environment Check with SB3
+# # 6 `rampup-v1` Environment Check with SB3
 # Stable Baselines3 offers an [environment checker](https://stable-baselines3.readthedocs.io/en/master/common/env_checker.html?highlight=check_env) to test an environment for conformity with the Gym API. Warnings are returned if the environment does not conform.
 
 # %%

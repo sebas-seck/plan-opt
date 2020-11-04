@@ -1,6 +1,7 @@
 # ---
 # jupyter:
 #   jupytext:
+#     formats: py:percent,ipynb
 #     text_representation:
 #       extension: .py
 #       format_name: percent
@@ -123,7 +124,7 @@ demand = [
 
 # %%
 class RampupEnv(gym.Env):
-    def __init__(self, verbose=False, horizon=10):
+    def __init__(self, horizon=10, verbose=False):
         super(RampupEnv, self).__init__()
 
         self.fleet_size = 1
@@ -207,7 +208,7 @@ class RampupEnv(gym.Env):
 
 # %% [markdown]
 # ## Random Walk Episode
-# The length of the episode is determined by `horizon`, actions are taken at random.
+# The length of the episode is determined by `horizon`, actions are taken at random. We observe, that games mostly lead to a negative total reward, thus it takes a policy better than a random policy to perform well.
 
 # %%
 horizon = 7 * 4
@@ -221,6 +222,140 @@ for step in range(horizon):
         print(
             f"Random walk episode is complete.\nTrajectory:\n{obs}\nTotal reward: {env.total_reward}"
         )
+        break
+
+# %% [markdown]
+# ## Value Iteration
+# All possible state transitions (transitions between possible combinations of state time and state actions) are iteratively evaluated for their value, until the improvement in value converges to a defined threshold. It takes 23 iterations for the sample environment with the provided data. The resulting table shows the value for each state-action.
+
+# %%
+h = 7 * 4  # time horizon
+env = RampupEnv(horizon=h, verbose=False)
+all_states = set(
+    [(s, a) for s in range(len(env.state_status)) for a in range(env.action_space.n)]
+)
+
+SMALL_ENOUGH = 1e-3  # threshold for convergence
+GAMMA = 1.0  # discount factor
+
+V = {}
+for state in all_states:
+    V[state] = 0
+
+biggest_change = 0
+iters = 0
+
+while True:
+    iters += 1
+    biggest_change = 0
+    for state in all_states:
+        old_v = V[state]
+        env.set_state(state)
+        state_time, state_status = state
+        if env.state_time < env.horizon - 1:
+            new_v = 0  # answer is accumulated
+            p_a = 1.0 / len(legal_changes[state_status])  # equal probability
+            for a in legal_changes[state_status]:
+                env.set_state(state)
+                o, r, d, i = env.step(a)
+                new_v += p_a * (r + GAMMA * V[(env.state_time, a)])
+                o, r, d, i = env.undo_step(o, r, d, i)
+            V[state] = new_v
+            biggest_change = max(biggest_change, np.abs(old_v - V[state]))
+
+        if env.verbose:
+            print(f"State: {state}, Old V: {old_v}")
+
+    if biggest_change < SMALL_ENOUGH:
+        print(f"Done in {iters} iterations")
+        v_table, v_table_p = pivot_v(V)
+        display(v_table_p)
+        break
+
+# %% [markdown]
+# ## Policy Iteration
+# Value iteration stops as the improvement of value converges, policy iteration then adds a policy improvement step. In the case of the example, there is no improvement visible, but we do get the policy for the values from value iterations inside of the attached policy improvement step.
+
+# %%
+h = 7 * 4  # time horizon
+env = RampupEnv(horizon=h, verbose=False)
+all_states = set(
+    [(s, a) for s in range(len(env.state_status)) for a in range(env.action_space.n)]
+)
+
+SMALL_ENOUGH = 1e-3
+GAMMA = 1
+
+policy = {}
+for state in all_states:
+    policy[state] = env.action_space.sample()
+
+V = {}
+for state in all_states:
+    V[state] = 0
+
+iters1, iters2 = 0, 0
+rep1, rep2 = "", ""
+
+while True:
+    iters1 = 0
+    # Policy Evaluation Step
+    while True:
+        iters1 += 1
+        biggest_change = 0
+        for state in all_states:
+            old_v = V[state]
+            env.set_state(state)
+            state_time, state_status = state
+            if env.state_time < env.horizon - 1:
+                new_v = 0  # answer is accumulated
+                p_a = 1.0 / len(legal_changes[state_status])  # equal probability
+                for a in legal_changes[state_status]:
+                    env.set_state(state)
+                    o, r, d, i = env.step(a)
+                    new_v += p_a * (r + GAMMA * V[(env.state_time, a)])
+                    o, r, d, i = env.undo_step(o, r, d, i)
+                V[state] = new_v
+                biggest_change = max(biggest_change, np.abs(old_v - V[state]))
+
+            if env.verbose:
+                print(f"State: {state}, Old V: {old_v}")
+
+        if biggest_change < SMALL_ENOUGH:
+            rep1 += f"{str(iters1)}, "
+            iters2 += 1
+            break
+
+    # Policy Improvement Step
+    is_policy_converged = True
+    for state in all_states:
+        for state in policy:
+            old_a = policy[state]
+            new_a = None
+            best_value = float("-inf")
+            env.set_state(state)
+            state_time, state_status = state
+            if env.state_time < env.horizon - 1:
+                # loop through all possible actions to find the best current action
+                for a in legal_changes[state_status]:
+                    env.set_state(state)
+                    o, r, d, i = env.step(a)
+                    v = r + GAMMA * V[(env.state_time, a)]
+                    # print(v)
+                    if v > best_value:
+                        best_value = v
+                        new_a = a
+                policy[state] = new_a
+                if new_a != old_a:
+                    is_policy_converged = False
+    if is_policy_converged:
+        print(
+            f"Policy evaluation and improvement steps were entered {iters2} times. \
+Policy evaluation iterated {rep1[:-2]} times."
+        )
+        v_table, v_table_p = pivot_v(V)
+        p_table = pivot_p(policy)
+        display_side_by_side([v_table_p, p_table], ["Value Table", "Policy Table"])
         break
 
 # %%
