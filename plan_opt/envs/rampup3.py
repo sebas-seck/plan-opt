@@ -137,7 +137,11 @@ class RampupEnv3(gym.Env):
         self.state_status = np.array(np.zeros(self.timeframe), dtype=np.uint8, ndmin=2)
         self.action_space = spaces.Discrete(self.action_features)
         self.observation_space = spaces.Box(
-            low=0, high=1, shape=[self.fleet_size, self.features, 1], dtype=np.float32,
+            low=0,
+            high=1,
+            shape=[self.features,],
+            dtype=np.float32,
+            # low=0, high=1, shape=[self.fleet_size, self.features, 1], dtype=np.float32,
         )
         self.obs_dummy_status = None
         self._generate_dummy_status()
@@ -157,31 +161,28 @@ class RampupEnv3(gym.Env):
         start = self.state_time
         end = start + 1
 
-        for i in range(self.fleet_size):
-            # other flight must be in separate square brackets!
-            try:
-                next_profitable_demand = (
-                    int(
-                        np.argwhere(
-                            self.demand.data[self.state_time + 1 :]
-                            > self.reward_threshold
-                        )[0]
-                    )
-                    + 1
+        try:
+            next_profitable_demand = (
+                int(
+                    np.argwhere(
+                        self.demand.data[self.state_time + 1 :] > self.reward_threshold
+                    )[0]
                 )
-            except IndexError:
-                next_profitable_demand = 0
-            try:
-                obs_append = 1 / next_profitable_demand
-            except ZeroDivisionError:
-                obs_append = 0
-            # obs_append = obs_append*255
-            obs.append([obs_append])
+                + 1
+            )
+        except IndexError:
+            next_profitable_demand = 0
+        try:
+            obs_append = 1 / next_profitable_demand
+        except ZeroDivisionError:
+            obs_append = 0
+        # obs_append = obs_append*255
+        obs.append(obs_append)
 
-            for j in range(self.action_features):
-                obs.append(self.obs_dummy_status[j][start:end])
+        for j in range(self.action_features):
+            obs.append(self.obs_dummy_status[j][self.state_time])
 
-        obs = np.asarray([obs], dtype=np.float32)
+        obs = np.asarray(obs, dtype=np.float32)
 
         # Info
         demand_surrounding = ""

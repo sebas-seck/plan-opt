@@ -19,6 +19,10 @@
 # The observation in v3 is changed because it is not neccessary to provide the entire demand array. A preprocessed datum can compress all required information and discard irrelevant details. Information on precise demand is moved from the observation space to the info bit of `step()`.
 
 # %%
+import os
+import subprocess
+import webbrowser
+
 from plan_opt.create import env_cb_creator
 from plan_opt.demand import Demand
 from plan_opt.demand_small_samples import four_weeks_uprising
@@ -33,8 +37,8 @@ config = {
     "PUNISH_ILLEGAL": True,
     # WORKFLOW CONFIGURATION
     "TENSORBOARD_LOG": "logs/rampup_tensorboard/",
-    "TIMESTEPS": 50000,
-    "REPETITIONS": 5,
+    "TIMESTEPS": 150000,
+    "REPETITIONS": 15,
     "EVAL_EPISODES": 50,
     "SHOW_TABLE": False,
     "LEARNING_RATE": 0.0007,
@@ -53,13 +57,14 @@ env_4W, eval_callback_4W, demand_4W = env_cb_creator(config, demand_4W)
 
 # %% [markdown]
 # ### Quick Health Check
+# - The observation is much neater compared to earlier versions
 
 # %%
 env_health(config, first_step=False, random_steps=1, verbose=0)
 
 # %% [markdown]
 # ### Train and Evaluate
-# Results look much more promising, as illegal moves are clearly learned and avoided.
+# Results look much more promising, as illegal moves are clearly learned and avoided. There are significant differences between repetitions!
 
 # %%
 best_model, train_env, eval_env = train_and_evaluate(
@@ -69,3 +74,21 @@ best_model, train_env, eval_env = train_and_evaluate(
     eval_callback=eval_callback_4W,
     tb_log_name=f"A2C_train4W_eval4W_{tb_suffix}",
 )
+
+# %% [markdown]
+# 15 repetitions over 150k episodes show results with variance remaining when applying the models!
+#
+# ![Evaluation](docs/nb12-eval.png)
+
+# %% [markdown]
+# ### Tensorboard
+
+# %%
+if 1 == 0:
+    pid = subprocess.Popen(
+        ["tensorboard", "--logdir", f"./{config['TENSORBOARD_LOG']}", "--port", "6006"]
+    )
+    os.system("sleep 5")
+    webbrowser.open("http://localhost:6006")
+
+# %%

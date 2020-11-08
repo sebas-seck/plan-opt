@@ -18,6 +18,10 @@
 # Starting with `rampup-v3`, a configuration is mandatory for the creation of an environment to have a consistent way of configuring.
 
 # %%
+import os
+import subprocess
+import webbrowser
+
 from plan_opt.create import env_cb_creator
 from plan_opt.demand import Demand
 from plan_opt.demand_small_samples import four_weeks_uprising
@@ -69,6 +73,20 @@ best_model, train_env, eval_env = train_and_evaluate(
     eval_callback=eval_callback_4W,
     tb_log_name=f"A2C_{str(config['TIMESTEPS'])[:-3]}k_train4W_eval4W_legal",
 )
+
+# %% [markdown]
+# ### Tensorboard
+
+# %%
+if 1 == 1:
+    pid = subprocess.Popen(
+        ["tensorboard", "--logdir", f"./{config['TENSORBOARD_LOG']}", "--port", "6006"]
+    )
+    os.system("sleep 5")
+    webbrowser.open("http://localhost:6006")
+
+# %% [markdown]
+# ### Interpretation
 
 # %% [markdown]
 # With punishment of illegal action transitions when training and evaluating on 4W, results are foul! Evaluation, most often, gets stuck and remains negative. Only some auspicious occurences turn out positive.
