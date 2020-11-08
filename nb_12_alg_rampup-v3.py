@@ -14,8 +14,9 @@
 # ---
 
 # %% [markdown]
-# # 10 Review of rampup-v2 with A2C
-# Starting with `rampup-v3`, a configuration is mandatory for the creation of an environment to have a consistent way of configuring.
+# # 12 Review of rampup-v3 with A2C
+#
+# The observation in v3 is changed because it is not neccessary to provide the entire demand array. A preprocessed datum can compress all required information and discard irrelevant details. Information on precise demand is moved from the observation space to the info bit of `step()`.
 
 # %%
 from plan_opt.create import env_cb_creator
@@ -24,20 +25,12 @@ from plan_opt.demand_small_samples import four_weeks_uprising
 from plan_opt.env_health import env_health
 from plan_opt.train_eval import train_and_evaluate
 
-# %% [markdown]
-# config = {
-#     "tensorboard_log": "logs/rampup_tensorboard/",
-#     "timesteps": 50000,
-#     "eval_episodes": 20,
-#     "repetitions": 5,
-#     "show_table": False,
-# }
-
 # %%
 config = {
     # ENVIRONMENT CONFIGURATION
-    "ENV_ID": "rampup-v2",
-    "PUNISH_ILLEGAL": False,
+    "ENV_ID": "rampup-v3",
+    "REWARD_THRESHOLD": 80,
+    "PUNISH_ILLEGAL": True,
     # WORKFLOW CONFIGURATION
     "TENSORBOARD_LOG": "logs/rampup_tensorboard/",
     "TIMESTEPS": 50000,
@@ -48,6 +41,13 @@ config = {
 }
 
 # %%
+tb_suffix = ""
+tb_suffix += f"_{str(config['TIMESTEPS'])[:-3]}k"
+if config["PUNISH_ILLEGAL"]:
+    tb_suffix += f"_legal_chg"
+tb_suffix
+
+# %%
 demand_4W = Demand(period=len(four_weeks_uprising), data=four_weeks_uprising)
 env_4W, eval_callback_4W, demand_4W = env_cb_creator(config, demand_4W)
 
@@ -55,11 +55,11 @@ env_4W, eval_callback_4W, demand_4W = env_cb_creator(config, demand_4W)
 # ### Quick Health Check
 
 # %%
-env_health(config, first_step=False, random_steps=0, verbose=0)
+env_health(config, first_step=False, random_steps=1, verbose=0)
 
 # %% [markdown]
 # ### Train and Evaluate
-# Results are foul, the environment cannot be trained to understand simple rules, which actions may follow other actions. The observation seems overly complicated, including the human view on upcoming demand.
+# Results look much more promising, as illegal moves are clearly learned and avoided.
 
 # %%
 best_model, train_env, eval_env = train_and_evaluate(
@@ -67,12 +67,5 @@ best_model, train_env, eval_env = train_and_evaluate(
     train_env=env_4W,
     eval_env=env_4W,
     eval_callback=eval_callback_4W,
-    tb_log_name=f"A2C_{str(config['TIMESTEPS'])[:-3]}k_train4W_eval4W_legal",
+    tb_log_name=f"A2C_train4W_eval4W_{tb_suffix}",
 )
-
-# %% [markdown]
-# With punishment of illegal action transitions when training and evaluating on 4W, results are foul! Evaluation, most often, gets stuck and remains negative. Only some auspicious occurences turn out positive.
-#
-# ![Evaluation](docs/nb10-eval.png)
-
-# %%

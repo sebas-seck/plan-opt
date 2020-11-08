@@ -6,7 +6,7 @@ from stable_baselines3.common.callbacks import EvalCallback
 from plan_opt.demand import Demand
 
 
-def env_cb_creator(demand=None, seed=None):
+def env_cb_creator(config, demand=None, seed=None):
     """Creates all instances needed for Rampup RL.
 
     To work, exactly one argument must remain None, the other must be
@@ -18,7 +18,7 @@ def env_cb_creator(demand=None, seed=None):
             generator. Defaults to None.
 
     Returns:
-        Tuple(RampupEnv2, EvalCallback, Demand): Instances ready to use
+        Tuple(RampupEnv, EvalCallback, Demand): Instances ready to use
             with RL.
     """
     # if exactly one argument is not none
@@ -29,7 +29,7 @@ def env_cb_creator(demand=None, seed=None):
             demand.show()
         else:
             demand.show(only_data=True)
-        env = gym.make("rampup-v2").create(demand)
+        env = gym.make(config["ENV_ID"]).create(config=config, demand=demand)
         callback = EvalCallback(
             env,
             best_model_save_path="../logs/",

@@ -14,7 +14,7 @@
 # ---
 
 # %% [markdown]
-# # 7 `rampup-v1` Step Test
+# # 11 `rampup-v3` Check
 # Brief notebook to review variables returned after each step.
 
 # %%
@@ -24,39 +24,12 @@ import gym
 from plan_opt.demand import Demand
 from plan_opt.envs.rampup1 import LEGAL_CHANGES
 from plan_opt.demand_small_samples import four_weeks_uprising
+from plan_opt.env_health import print_step_details
 
 # %%
 demand = Demand(period=len(four_weeks_uprising), data=four_weeks_uprising)
 demand.show(only_data=True)
-env = gym.make("rampup-v1").create(demand)
-
-
-# %% [markdown]
-# ### Step Details Helper Function
-# Displays the current timestep, whether the episode if done after the timestep, the info dictionary, the shape of the observation and the observation.
-
-# %%
-def print_step_details(o, r, d, i):
-    print(
-        "Timestep:\t",
-        env.state_time,
-        "\nCurrent Demand:\t",
-        env.demand.data[env.state_time],
-        "\nCurrent Action:\t",
-        env.state_status[0][env.state_time],
-        "\nReward:\t\t",
-        r,
-        "\nDone:\t\t",
-        d,
-        "\nInfo:\t\t",
-        i,
-        "\nShape:\t\t",
-        o.shape,
-        "\nObservation:\n",
-        o,
-        "\n",
-    )
-
+env = gym.make("rampup-v3").create(demand)
 
 # %% [markdown]
 # ### First step
@@ -64,10 +37,7 @@ def print_step_details(o, r, d, i):
 # %%
 obs = env._set_initial_state(initial_state_status=3)
 obs, reward, done, info = env.step(2)
-print_step_details(obs, reward, done, info)
-
-# %%
-env.obs_dummy_status
+print_step_details(env, obs, reward, done, info)
 
 # %% [markdown]
 # ### Step at random point in time
@@ -78,12 +48,9 @@ for i in range(5):
     a = env.reset()
     action = random.sample(LEGAL_CHANGES[env.obs_last_legal_status], 1)[0]
     obs, reward, done, info = env.step(action)
-    print_step_details(obs, reward, done, info)
+    print_step_details(env, obs, reward, done, info)
 
 # %%
 env.observation_space.__dict__
-
-# %%
-env.obs_demand
 
 # %%
