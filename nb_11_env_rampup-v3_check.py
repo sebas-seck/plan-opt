@@ -22,14 +22,14 @@ import random
 import gym
 
 from plan_opt.demand import Demand
-from plan_opt.envs.rampup1 import LEGAL_CHANGES
+from plan_opt.envs.rampup3 import LEGAL_CHANGES, DEFAULT_CONFIG
 from plan_opt.demand_small_samples import four_weeks_uprising
 from plan_opt.env_health import print_step_details
 
 # %%
 demand = Demand(period=len(four_weeks_uprising), data=four_weeks_uprising)
 demand.show(only_data=True)
-env = gym.make("rampup-v3").create(demand)
+env = gym.make("rampup-v3").create(DEFAULT_CONFIG, demand)
 
 # %% [markdown]
 # ### First step

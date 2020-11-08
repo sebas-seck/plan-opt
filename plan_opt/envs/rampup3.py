@@ -312,10 +312,11 @@ class RampupEnv3(gym.Env):
             # set the status in the dummy view
             self.obs_dummy_status[initial_state_status][self.state_time] = 1
             # set the status in the plain view
+            self.obs_last_legal_status = initial_state_status
             self.state_status[0][self.state_time] = initial_state_status
             action_description, reward = self._translate_action(initial_state_status)
         else:
-            self.obs_last_legal_status = initial_state_status
+            self.obs_last_legal_status = 3
             reward = 0
 
         self.total_reward = reward
