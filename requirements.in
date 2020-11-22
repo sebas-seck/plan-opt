@@ -2,7 +2,7 @@ black
 gym
 jupytext
 matplotlib
-notebook
+notebook>=6.1.5
 numpy
 pandas
 pre-commit
