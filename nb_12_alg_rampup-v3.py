@@ -43,7 +43,7 @@ config = {
     # WORKFLOW CONFIGURATION
     "TENSORBOARD_LOG": "logs/rampup_tensorboard/",
     "TIMESTEPS": 100000,
-    "REPETITIONS": 1,
+    "REPETITIONS": 15,
     "EVAL_EPISODES": 50,
     "SHOW_TABLE": False,
     "LEARNING_RATE": 0.0007,
@@ -99,5 +99,9 @@ if 1 == 0:
     )
     os.system("sleep 5")
     webbrowser.open("http://localhost:6006")
+
+# %%
+if 1 == 0:
+    os.system("kill -9 $(lsof -t -i:6006)")
 
 # %%

@@ -15,8 +15,9 @@ class TensorboardCallback(BaseCallback):
     Custom callback for plotting additional values in tensorboard.
     """
 
-    def __init__(self, verbose=0):
+    def __init__(self, tb_log_name, verbose=0):
         super(TensorboardCallback, self).__init__(verbose)
+        self.tb_log_name = tb_log_name
 
     def _on_step(self) -> bool:
         if "alpha" in self.model.policy_kwargs["optimizer_kwargs"]:
@@ -27,15 +28,37 @@ class TensorboardCallback(BaseCallback):
             value = self.model.policy_kwargs["optimizer_kwargs"]["eps"]
             self.logger.record("train/policy_eps", value)
 
-        if "weight_decay" in self.model.policy_kwargs["optimizer_kwargs"]:
-            value = self.model.policy_kwargs["optimizer_kwargs"]["weight_decay"]
-            self.logger.record("train/weight_decay", value)
+        # if "weight_decay" in self.model.policy_kwargs["optimizer_kwargs"]:
+        #     value = self.model.policy_kwargs["optimizer_kwargs"]["weight_decay"]
+        #     self.logger.record("train/weight_decay", value)
 
         # values always exist
         value = self.model.gamma
         self.logger.record("train/gamma", value)
 
         return True
+
+    def _on_training_end(self) -> None:
+        # ADD HPARAMS
+        hparams = {
+            "policy_weight_decay": self.model.policy_kwargs["optimizer_kwargs"][
+                "weight_decay"
+            ]
+        }
+
+        # self.logger.TensorBoardOutputFormat.writer.add_hparams(hparams, {"hparam/test1":3})
+        # print(self.logger.get_dir())
+        from torch.utils.tensorboard import SummaryWriter
+
+        x = self.logger.get_dir().rsplit("/", 1)[1]
+
+        metric_dict = {}
+        for k, v in hparams.items():
+            metric_dict["hparam/" + k] = v
+
+        # writer = SummaryWriter(log_dir=self.logger.get_dir())
+        writer = SummaryWriter(log_dir="logs/rampup_tensorboard/")
+        writer.add_hparams(hparam_dict=hparams, metric_dict=metric_dict, run_name=x)
 
 
 def train_and_evaluate(config, train_env, eval_env, eval_callback, tb_log_name):
@@ -67,7 +90,7 @@ def train_and_evaluate(config, train_env, eval_env, eval_callback, tb_log_name):
 
         model.learn(
             total_timesteps=config["TIMESTEPS"],
-            callback=[eval_callback, TensorboardCallback()],
+            callback=[eval_callback, TensorboardCallback(tb_log_name)],
             tb_log_name=tb_log_name,
         )
 
