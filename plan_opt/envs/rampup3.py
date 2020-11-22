@@ -2,13 +2,15 @@
 
 import random
 import textwrap
+
 import gym
-from gym.core import ActionWrapper
 import numpy as np
 import pandas as pd
 from gym import spaces
-from torch import dtype
+from gym.core import ActionWrapper
 from plan_opt.demand import Demand
+from stable_baselines3.common.sb2_compat.rmsprop_tf_like import RMSpropTFLike
+from torch import dtype
 
 ACTION_LIST = [
     "OPERATE",  # 0
@@ -36,6 +38,7 @@ DEFAULT_CONFIG = {
     "EVAL_EPISODES": 50,
     "SHOW_TABLE": False,
     "LEARNING_RATE": 0.0007,
+    "POLICY_KWARGS": None,
 }
 
 
@@ -198,7 +201,7 @@ class RampupEnv3(gym.Env):
             "action_change": f"{self.state_status[0][self.state_time-1]} -> {self.obs_last_legal_status}",
             "demand_surrounding": demand_surrounding,
             "next_profitable_demand": next_profitable_demand,
-            "demand_observation": obs_append,
+            "demand_observation": obs[0],
         }
 
         return obs, info

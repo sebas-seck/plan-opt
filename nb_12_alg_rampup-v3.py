@@ -23,11 +23,16 @@ import os
 import subprocess
 import webbrowser
 
+from stable_baselines3.common.sb2_compat.rmsprop_tf_like import RMSpropTFLike
+
 from plan_opt.create import env_cb_creator
 from plan_opt.demand import Demand
 from plan_opt.demand_small_samples import four_weeks_uprising
 from plan_opt.env_health import env_health
-from plan_opt.train_eval import train_and_evaluate
+from plan_opt.train_eval3 import train_and_evaluate
+
+# %% [markdown]
+# With default policy settings, training is worse and less stable.
 
 # %%
 config = {
@@ -37,11 +42,15 @@ config = {
     "PUNISH_ILLEGAL": True,
     # WORKFLOW CONFIGURATION
     "TENSORBOARD_LOG": "logs/rampup_tensorboard/",
-    "TIMESTEPS": 150000,
-    "REPETITIONS": 15,
+    "TIMESTEPS": 100000,
+    "REPETITIONS": 1,
     "EVAL_EPISODES": 50,
     "SHOW_TABLE": False,
     "LEARNING_RATE": 0.0007,
+    "POLICY_KWARGS": {
+        "optimizer_class": RMSpropTFLike,
+        "optimizer_kwargs": {"alpha": 0.99, "eps": 1e-5, "weight_decay": 0,},
+    },
 }
 
 # %%
@@ -60,7 +69,7 @@ env_4W, eval_callback_4W, demand_4W = env_cb_creator(config, demand_4W)
 # - The observation is much neater compared to earlier versions
 
 # %%
-env_health(config, first_step=False, random_steps=1, verbose=0)
+env_health(config, env_4W, first_step=False, random_steps=3, verbose=0)
 
 # %% [markdown]
 # ### Train and Evaluate
