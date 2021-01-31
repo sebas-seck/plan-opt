@@ -136,30 +136,30 @@ class Demand:
         else:
             self.has_sudden_change = False
 
-    def show(self, only_data=False):
-        """Plots demand curve and data scattered around demand curve.
+    # def show(self, only_data=False):
+    #     """Plots demand curve and data scattered around demand curve.
 
-        The demand curve is shown as line diagramm, the data (which is
-        scattered around the demand curve), is shown as a scatter plot.
+    #     The demand curve is shown as line diagramm, the data (which is
+    #     scattered around the demand curve), is shown as a scatter plot.
 
-        Args:
-            only_data (bool, optional): If `True`, only the data is
-                plotted. Set to `True` if data was not generated
-                within instance but has been provided during
-                instantiation. Defaults to False.
-        """
-        try:
-            if only_data:
-                plt.scatter(self.x, self.data, alpha=0.5)
-            else:
-                fig, axs = plt.subplots(1, 2)
-                axs[0].plot(self.x, self.y_all)
-                axs[0].set_title("Demand Curve")
-                axs[1].scatter(self.x, self.data, alpha=0.5)
-                axs[1].set_title("Scattered Data around Demand Curve")
-            plt.show()
-        except ValueError:
-            print("Demand has not been created yet!")
+    #     Args:
+    #         only_data (bool, optional): If `True`, only the data is
+    #             plotted. Set to `True` if data was not generated
+    #             within instance but has been provided during
+    #             instantiation. Defaults to False.
+    #     """
+    #     try:
+    #         if only_data:
+    #             plt.scatter(self.x, self.data, alpha=0.5)
+    #         else:
+    #             fig, axs = plt.subplots(1, 2)
+    #             axs[0].plot(self.x, self.y_all)
+    #             axs[0].set_title("Demand Curve")
+    #             axs[1].scatter(self.x, self.data, alpha=0.5)
+    #             axs[1].set_title("Scattered Data around Demand Curve")
+    #         plt.show()
+    #     except ValueError:
+    #         print("Demand has not been created yet!")
 
     def info(self):
         print(f"Seed is {self.seed}")
