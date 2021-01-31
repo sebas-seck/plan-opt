@@ -1,0 +1,21 @@
+# standard libs
+matplotlib
+numpy
+pandas
+
+# for RL
+gym
+sklearn
+stable-baselines3==0.10.0
+tensorboard
+torch>=1.7.0
+
+# local package
+-e src
+
+# coding
+black
+jupytext
+notebook>=6.1.5
+pre-commit
+pytest
