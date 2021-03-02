@@ -49,7 +49,7 @@ config = {
     "LEARNING_RATE": 0.0007,
     "POLICY_KWARGS": {
         "optimizer_class": RMSpropTFLike,
-        "optimizer_kwargs": {"alpha": 0.99, "eps": 1e-5, "weight_decay": 0,},
+        "optimizer_kwargs": {"alpha": 0.99, "eps": 1e-8, "weight_decay": 0,},
     },
 }
 
@@ -93,7 +93,7 @@ best_model, train_env, eval_env = train_and_evaluate(
 # ### Tensorboard
 
 # %%
-if 1 == 0:
+if 1 == 1:
     pid = subprocess.Popen(
         ["tensorboard", "--logdir", f"./{config['TENSORBOARD_LOG']}", "--port", "6006"]
     )
