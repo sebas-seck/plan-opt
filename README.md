@@ -12,6 +12,7 @@ conda activate rl
 pip install pip-tools
 pip-compile --output-file=macos-py3.8-requirements.txt macos-py3.8-requirements.in
 pip-sync macos-py3.8-requirements.txt
+pip install -e src/
 ```
 
 ## Content

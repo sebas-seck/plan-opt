@@ -6,12 +6,10 @@ pandas
 # for RL
 gym
 sklearn
-stable-baselines3==0.10.0
+stable-baselines3>=0.10.0
 tensorboard
 torch>=1.7.0
-
-# local package
--e src
+urllib3>=1.26.5
 
 # coding
 black
